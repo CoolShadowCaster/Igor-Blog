@@ -9,15 +9,18 @@ from sqlalchemy.orm import relationship
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm
 from flask_gravatar import Gravatar
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 login_manager = LoginManager()
 login_manager.init_app(app)
 ckeditor = CKEditor(app)
 Bootstrap(app)
 
-##CONNECT TO DB
+# CONNECT TO DB
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -32,19 +35,19 @@ gravatar = Gravatar(app,
                     base_url=None)
 
 
-#Create admin-only decorator
+# Create admin-only decorator
 def admin_only(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        #If id is not 1 then return abort with 403 error
+        # If id is not 1 then return abort with 403 error
         if current_user.id != 1:
             return abort(403)
-        #Otherwise continue with the route function
+        # Otherwise continue with the route function
         return f(*args, **kwargs)
     return decorated_function
 
 
-##CONFIGURE TABLES
+# CONFIGURE TABLES
 class User(UserMixin, db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
@@ -100,7 +103,10 @@ def register():
 
         new_user = User(name=request.form.get('name'),
                         email=request.form.get('email'),
-                        password=generate_password_hash(request.form.get("password"), method='pbkdf2:sha1', salt_length=8))
+                        password=generate_password_hash(
+                            request.form.get("password"),
+                            method='pbkdf2:sha1',
+                            salt_length=8))
         db.session.add(new_user)
         db.session.commit()
 
